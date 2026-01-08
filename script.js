@@ -200,83 +200,16 @@ async function saveToNotion(combination, weekType) {
 
 // Generar una combinación aleatoria
 function generateRandomCombination() {
-    // Generar todas las combinaciones posibles de 3 personas
-    const combinations3 = [];
+    // Mezclar aleatoriamente todas las personas
+    const shuffled = [...CONFIG.PEOPLE].sort(() => Math.random() - 0.5);
     
-    for (let i = 0; i < CONFIG.PEOPLE.length; i++) {
-        for (let j = i + 1; j < CONFIG.PEOPLE.length; j++) {
-            for (let k = j + 1; k < CONFIG.PEOPLE.length; k++) {
-                combinations3.push([CONFIG.PEOPLE[i], CONFIG.PEOPLE[j], CONFIG.PEOPLE[k]]);
-            }
-        }
-    }
+    // Primera 3 personas forman el grupo 1
+    const group1 = shuffled.slice(0, 3);
     
-    console.log(`Total combinaciones posibles: ${combinations3.length}`);
+    // Últimas 2 personas forman el grupo 2
+    const group2 = shuffled.slice(3, 5);
     
-    // Obtener personas del período anterior (si existe)
-    const lastEntry = history.length > 0 ? history[history.length - 1] : null;
-    const previousGroup1 = (lastEntry && lastEntry.group1) ? lastEntry.group1 : [];
-    const previousGroup2 = (lastEntry && lastEntry.group2) ? lastEntry.group2 : [];
-    
-    console.log(`Período anterior - Grupo 1: ${(previousGroup1 || []).join(', ') || 'ninguno'}`);
-    console.log(`Período anterior - Grupo 2: ${(previousGroup2 || []).join(', ') || 'ninguno'}`);
-    
-    // Filtrar combinaciones válidas
-    const availableCombinations = combinations3.filter(combo => {
-        // No puede repetir la misma combinación de 3
-        const combo_used = history.some(entry => 
-            arraysEqual([...combo].sort(), [...entry.group1].sort())
-        );
-        if (combo_used) {
-            console.log(`  ❌ ${combo.join(', ')} - ya usado`);
-            return false;
-        }
-        
-        // No puede haber personas del grupo 1 anterior en el nuevo grupo 1
-        const hasPersonFromPreviousGroup1 = combo.some(p => previousGroup1.includes(p));
-        if (hasPersonFromPreviousGroup1) {
-            console.log(`  ❌ ${combo.join(', ')} - tiene personas del grupo 1 anterior`);
-            return false;
-        }
-        
-        // Verificar grupo 2 (los 2 restantes)
-        const tempGroup2 = CONFIG.PEOPLE.filter(p => !combo.includes(p));
-        
-        // No puede repetir grupo 2
-        const group2_used = history.some(entry => 
-            arraysEqual([...tempGroup2].sort(), [...entry.group2].sort())
-        );
-        if (group2_used) {
-            console.log(`  ❌ ${combo.join(', ')} - grupo 2 (${tempGroup2.join(', ')}) ya usado`);
-            return false;
-        }
-        
-        // No puede haber personas del grupo 2 anterior en el nuevo grupo 2
-        const hasPersonFromPreviousGroup2 = tempGroup2.some(p => previousGroup2.includes(p));
-        if (hasPersonFromPreviousGroup2) {
-            console.log(`  ❌ ${combo.join(', ')} - grupo 2 tiene personas del grupo 2 anterior`);
-            return false;
-        }
-        
-        console.log(`  ✅ ${combo.join(', ')} - válido`);
-        return true;
-    });
-    
-    console.log(`Combinaciones disponibles: ${availableCombinations.length}`);
-    
-    if (availableCombinations.length === 0) {
-        console.log('⚠️ No hay combinaciones posibles');
-        return null;
-    }
-    
-    // Elegir aleatoriamente una combinación de 3
-    const selectedIndex = Math.floor(Math.random() * availableCombinations.length);
-    const group1 = availableCombinations[selectedIndex];
-    
-    // Las 2 personas restantes forman el grupo de 2
-    const group2 = CONFIG.PEOPLE.filter(p => !group1.includes(p));
-    
-    console.log(`Seleccionado - Grupo 1: ${group1.join(', ')}, Grupo 2: ${group2.join(', ')}`);
+    console.log(`Grupo 1: ${group1.join(', ')}, Grupo 2: ${group2.join(', ')}`);
     
     return {
         group1: group1,
@@ -286,19 +219,10 @@ function generateRandomCombination() {
 
 // Verificar si una combinación ya fue usada
 function isCombinationUsed(combination) {
-    if (!combination) return true; // Si es null, ya no hay combinaciones
+    if (!combination) return true;
     
-    // Verificar grupos de 3
-    const group1Used = history.some(entry => 
-        arraysEqual(combination.group1.sort(), entry.group1.sort())
-    );
-    
-    // Verificar grupos de 2
-    const group2Used = history.some(entry => 
-        arraysEqual(combination.group2.sort(), entry.group2.sort())
-    );
-
-    return group1Used || group2Used;
+    // Simplemente hacer aleatorio sin verificaciones
+    return false; // Siempre permitir nueva combinación
 }
 
 // Comparar arrays
@@ -380,14 +304,6 @@ function loadHistory() {
     const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
     if (stored) {
         history = JSON.parse(stored);
-        // Normalizar propiedades (pueden ser group1/group_1)
-        history = history.map(entry => ({
-            date: entry.date,
-            weekNumber: entry.weekNumber || entry.week_number,
-            weekType: entry.weekType,
-            group1: entry.group1 || entry.group_1 || [],
-            group2: entry.group2 || entry.group_2 || []
-        }));
     }
     
     // Determinar el número de semana actual basado en el historial
