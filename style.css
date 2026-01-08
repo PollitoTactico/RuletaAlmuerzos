@@ -103,6 +103,20 @@ header .subtitle {
     transform: translateY(0);
 }
 
+/* Botón Delete */
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+    padding: 8px 15px;
+    font-size: 0.9em;
+}
+
+.btn-delete:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
 /* Message Section */
 .message {
     text-align: center;
@@ -379,6 +393,17 @@ header .subtitle {
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    margin: 0;
 }
 
 .close {

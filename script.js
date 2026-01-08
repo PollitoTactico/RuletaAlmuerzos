@@ -14,21 +14,21 @@ const SCHEDULES = {
     week1: {
         schedule1: {
             time: '12:00 PM',
-            days: ['Lunes', 'Miércoles', 'Jueves']
+            days: ['Lunes', 'Miércoles', 'Viernes']
         },
         schedule2: {
             time: '1:00 PM',
-            days: ['Martes', 'Viernes']
+            days: ['Martes', 'Jueves']
         }
     },
     week2: {
         schedule1: {
             time: '1:00 PM',
-            days: ['Lunes', 'Miércoles', 'Jueves']
+            days: ['Martes', 'Jueves']
         },
         schedule2: {
             time: '12:00 PM',
-            days: ['Martes', 'Viernes']
+            days: ['Lunes', 'Miércoles', 'Viernes']
         }
     }
 };
@@ -49,6 +49,7 @@ function setupEventListeners() {
     document.getElementById('generateBtn').addEventListener('click', generateWeek);
     document.getElementById('historyBtn').addEventListener('click', showHistoryModal);
     document.getElementById('resetBtn').addEventListener('click', resetHistory);
+    document.getElementById('deleteHistoryBtn').addEventListener('click', deleteSupabaseHistory);
     
     // Cerrar modal
     const modal = document.getElementById('historyModal');
@@ -177,11 +178,11 @@ function displayResults(combination, weekType, date) {
     weekTitle.textContent = `Generada: ${date}`;
     weekNumber.textContent = currentWeekNumber;
     
-    let description = `Los grupos se mantendrán durante 2 semanas. `;
+    let description = `Este período dura 2 semanas. `;
     if (currentWeekNumber === 1) {
-        description += `En el próximo periodo intercambiarán horarios.`;
+        description += `Semana 1: Grupo 3 come a las 12:00 PM (L, M, V). Semana 2: Intercambian días y horarios.`;
     } else {
-        description += `Este es el último periodo antes de nuevas combinaciones.`;
+        description += `Período anterior finaliza. Nuevos grupos inician en Semana 1.`;
     }
     weekDescription.textContent = description;
 
@@ -404,4 +405,43 @@ function getLocalHistoryHTML() {
             </div>
         </div>
     `).join('');
+}
+// Borrar historial de Supabase
+async function deleteSupabaseHistory() {
+    if (!confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) {
+        return;
+    }
+
+    if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === 'https://your-project.supabase.co') {
+        // Si Supabase no está configurado, borrar solo localStorage
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+        history = [];
+        currentWeekNumber = 1;
+        showHistoryModal();
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${CONFIG.SUPABASE_URL}/rest/v1/roulette_history`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'apikey': CONFIG.SUPABASE_KEY,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (response.ok) {
+            localStorage.removeItem(CONFIG.STORAGE_KEY);
+            history = [];
+            currentWeekNumber = 1;
+            showHistoryModal();
+            alert('✅ Historial borrado completamente');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('⚠️ Error al borrar. Intenta de nuevo.');
+    }
 }
