@@ -179,9 +179,9 @@ function displayResults(combination, weekType, date) {
     
     let description = `Los grupos se mantendrán durante 2 semanas. `;
     if (currentWeekNumber === 1) {
-        description += `En la próxima semana intercambiarán horarios.`;
+        description += `En el próximo periodo intercambiarán horarios.`;
     } else {
-        description += `Esta es la última semana de estos grupos antes de nuevas combinaciones.`;
+        description += `Este es el último periodo antes de nuevas combinaciones.`;
     }
     weekDescription.textContent = description;
 
@@ -371,7 +371,7 @@ async function showHistoryModal() {
         historyList.innerHTML = data.map((entry, idx) => `
             <div class="history-item">
                 <div>
-                    <strong>📅 Semana ${entry.week_number} - ${new Date(entry.created_at).toLocaleDateString('es-ES')}</strong><br>
+                    <strong>📅 Periodo ${entry.week_number} - ${new Date(entry.created_at).toLocaleDateString('es-ES')}</strong><br>
                     <strong>Grupo de 3:</strong> ${entry.group_3.join(', ')}<br>
                     <span style="color: #666; font-size: 0.9em;">
                         ${entry.schedule_3} - ${entry.days_3.join(', ')}
@@ -398,7 +398,7 @@ function getLocalHistoryHTML() {
     return history.map((entry, idx) => `
         <div class="history-item">
             <div>
-                <strong>📅 Semana ${entry.weekNumber} - ${entry.date}</strong><br>
+                <strong>📅 Periodo ${entry.weekNumber} - ${entry.date}</strong><br>
                 <strong>Grupo de 3:</strong> ${entry.group3.join(', ')}<br>
                 <strong>Grupo de 2:</strong> ${entry.group2.join(', ')}
             </div>
