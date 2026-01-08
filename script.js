@@ -408,22 +408,27 @@ function getLocalHistoryHTML() {
 }
 // Borrar historial de Supabase
 async function deleteSupabaseHistory() {
-    if (!confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) {
+    if (!confirm('¿Borrar TODO el historial local? Esta acción no se puede deshacer.')) {
         return;
     }
 
-    // Borrar localStorage
+    console.log('Borrando historial...');
+    
+    // Borrar localStorage primero
     localStorage.removeItem(CONFIG.STORAGE_KEY);
+    console.log('✅ localStorage borrado');
+    
+    // Reiniciar variables locales
     history = [];
     currentWeekNumber = 1;
-    updateHistoryDisplay();
     
-    // Si Supabase está configurado, intentar borrar
+    // Intentar borrar de Supabase si está configurado
     if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_URL !== 'https://your-project.supabase.co') {
+        console.log('Intentando borrar Supabase...');
         try {
-            // Primero obtener todos los IDs
+            // Obtener todos los registros
             const getResponse = await fetch(
-                `${CONFIG.SUPABASE_URL}/rest/v1/roulette_history?select=id`,
+                `${CONFIG.SUPABASE_URL}/rest/v1/roulette_history`,
                 {
                     method: 'GET',
                     headers: {
@@ -435,32 +440,33 @@ async function deleteSupabaseHistory() {
 
             if (getResponse.ok) {
                 const records = await getResponse.json();
+                console.log(`Encontrados ${records.length} registros para borrar`);
                 
-                // Borrar cada registro
+                // Borrar cada registro individualmente
                 for (let record of records) {
-                    await fetch(
+                    const deleteResp = await fetch(
                         `${CONFIG.SUPABASE_URL}/rest/v1/roulette_history?id=eq.${record.id}`,
                         {
                             method: 'DELETE',
                             headers: {
                                 'apikey': CONFIG.SUPABASE_KEY,
-                                'Content-Type': 'application/json'
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
                             }
                         }
                     );
+                    console.log(`Registro ${record.id} borrado:`, deleteResp.ok);
                 }
                 console.log('✅ Historial de Supabase borrado');
             }
         } catch (error) {
-            console.log('⚠️ No se pudo borrar Supabase, pero el historial local se limpió');
+            console.log('⚠️ Error al borrar Supabase:', error);
         }
     }
     
-    // Mostrar modal actualizado
-    const historyList = document.getElementById('modalHistoryList');
-    historyList.innerHTML = '<p class="empty-message">📭 Historial borrado correctamente</p>';
-    
+    // Recargar la página después de 1 segundo
+    console.log('Recargando página...');
     setTimeout(() => {
-        location.reload(); // Recargar página para limpiar todo
-    }, 2000);
+        location.reload();
+    }, 1000);
 }
