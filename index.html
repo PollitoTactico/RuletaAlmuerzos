@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta de Almuerzos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍽️ Ruleta de Almuerzos Semanales</h1>
+            <p class="subtitle">Organizando grupos de almuerzo para 5 personas</p>
+        </header>
+
+        <section class="controls">
+            <button id="generateBtn" class="btn btn-primary">Generar Grupos de la Semana</button>
+            <button id="historyBtn" class="btn btn-info">Ver Historial</button>
+            <button id="resetBtn" class="btn btn-secondary">Reiniciar Historial</button>
+        </section>
+
+        <div id="message" class="message"></div>
+
+        <section class="results" id="results" style="display: none;">
+            <div class="week-info">
+                <h2 id="weekTitle"></h2>
+                <p class="week-number">Semana <span id="weekNumber">1</span></p>
+                <p id="weekDescription" class="week-description"></p>
+            </div>
+
+            <div class="groups-container">
+                <div class="group group-3">
+                    <div class="group-header">
+                        <h3>Grupo de 3 Personas</h3>
+                        <div class="schedule-badge" id="schedule3"></div>
+                    </div>
+                    <ul id="group3Members" class="members-list"></ul>
+                    <div class="schedule-details" id="scheduleDetails3"></div>
+                </div>
+
+                <div class="group group-2">
+                    <div class="group-header">
+                        <h3>Grupo de 2 Personas</h3>
+                        <div class="schedule-badge" id="schedule2"></div>
+                    </div>
+                    <ul id="group2Members" class="members-list"></ul>
+                    <div class="schedule-details" id="scheduleDetails2"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="history">
+            <h3>Historial de Combinaciones</h3>
+            <div id="historyList" class="history-list">
+                <p class="empty-message">No hay historial aún</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal Historial -->
+    <div id="historyModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>📋 Historial Completo</h2>
+            <div id="modalHistoryList" class="history-list">
+                <p class="loading">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

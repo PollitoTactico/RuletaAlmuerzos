@@ -1,0 +1,82 @@
+CAMBIOS REALIZADOS - Versión Supabase
+=====================================
+
+✅ ARCHIVOS NUEVOS CREADOS:
+  1. SUPABASE_SETUP.sql - Script SQL para crear tabla
+  2. SUPABASE_CONFIG.md - Guía de configuración
+  3. .env.local - Para configuración local (opcional)
+
+✅ ARCHIVOS MODIFICADOS:
+  1. index.html
+     - Agregado botón "Ver Historial" (btn-info)
+     - Agregado modal para mostrar historial
+     - Agregado elemento para mostrar Semana 1 o 2
+  
+  2. style.css
+     - Estilos para botón .btn-info
+     - Estilos para modal (.modal, .modal-content)
+     - Estilos para .close y .week-number
+  
+  3. script.js
+     - Agregado CONFIG.SUPABASE_URL y CONFIG.SUPABASE_KEY
+     - Nueva función: setupEventListeners() con manejo del modal
+     - Nueva función: saveToSupabase() - guarda en Supabase
+     - Nueva función: showHistoryModal() - muestra historial
+     - Nueva función: getLocalHistoryHTML() - formatea historial local
+     - Modificado displayResults() para mostrar semana actual
+     - Agregado evento para guardar en Supabase después de generar grupo
+  
+  4. README.md
+     - Actualizado con info de Supabase
+
+✅ QUÉ HACE LA APP AHORA:
+
+  1. Genera grupos como antes
+  2. Guarda en localStorage (siempre)
+  3. Si Supabase está configurado, también guarda allá
+  4. Botón "Ver Historial" muestra un modal con registros
+  5. Muestra claramente "Semana 1" o "Semana 2"
+  6. Funciona sin Supabase (solo localStorage)
+
+✅ CONFIGURACIÓN SUPABASE (3 PASOS):
+
+  PASO 1: Copiar SQL
+  - Abre SUPABASE_SETUP.sql
+  - Copia todo el contenido
+  
+  PASO 2: Ejecutar en Supabase
+  - Ve a supabase.com → tu proyecto → SQL Editor
+  - Pega el SQL y ejecuta
+  
+  PASO 3: Agregar credenciales a script.js
+  - Línea 8: SUPABASE_URL = tu URL (de Project Settings → API)
+  - Línea 9: SUPABASE_KEY = tu key pública (de Project Settings → API)
+
+✅ ESTRUCTURA SQL:
+
+  Tabla: roulette_history
+  - id (BIGINT) - ID único
+  - created_at (TIMESTAMP) - Fecha/hora
+  - week_number (INTEGER) - 1 o 2
+  - group_3 (TEXT[]) - Array de nombres
+  - group_2 (TEXT[]) - Array de nombres
+  - schedule_3 (TEXT) - Horario (12:00 PM o 1:00 PM)
+  - schedule_2 (TEXT) - Horario (12:00 PM o 1:00 PM)
+  - days_3 (TEXT[]) - Array de días
+  - days_2 (TEXT[]) - Array de días
+
+✅ SIN SUPABASE:
+
+  Si no quieres configurar Supabase:
+  - La app funciona 100% con localStorage
+  - Aún puedes usar "Ver Historial" para ver datos locales
+  - Solo que no se sincroniza con base de datos
+
+✅ PRÓXIMOS PASOS:
+
+  1. Sube cambios a GitHub
+  2. (Opcional) Configura Supabase
+  3. Redeploy en Vercel
+  4. Prueba generando grupos
+
+¡LISTO! 🚀
