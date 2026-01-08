@@ -107,7 +107,7 @@ function generateWeek() {
         date: new Date().toLocaleDateString('es-ES'),
         weekNumber: currentWeekNumber,
         weekType: weekType,
-        group3: combination.group3,
+        group1: combination.group1,
         group2: combination.group2
     };
 
@@ -165,7 +165,7 @@ async function saveToNotion(combination, weekType) {
                         number: currentWeekNumber
                     },
                     'Grupo 3': {
-                        multi_select: combination.group3.map(p => ({ name: p }))
+                        multi_select: combination.group1.map(p => ({ name: p }))
                     },
                     'Grupo 2': {
                         multi_select: combination.group2.map(p => ({ name: p }))
@@ -211,27 +211,27 @@ function generateRandomCombination() {
         }
     }
     
-    console.log(`Total combinaciones posibles de 3: ${combinations3.length}`);
+    console.log(`Total combinaciones posibles: ${combinations3.length}`);
     
     // Filtrar las que ya no han sido usadas
     const availableCombinations = combinations3.filter(combo => {
         const used = history.some(entry => 
-            arraysEqual(combo.sort(), entry.group3.sort())
+            arraysEqual(combo.sort(), entry.group1.sort())
         );
         return !used;
     });
     
-    console.log(`Combinaciones disponibles de 3: ${availableCombinations.length}`);
+    console.log(`Combinaciones disponibles: ${availableCombinations.length}`);
     
     if (availableCombinations.length === 0) {
         return null; // No hay más combinaciones disponibles
     }
     
     // Elegir aleatoriamente una combinación de 3
-    const group3 = availableCombinations[Math.floor(Math.random() * availableCombinations.length)];
+    const group1 = availableCombinations[Math.floor(Math.random() * availableCombinations.length)];
     
     // Las 2 personas restantes forman el grupo de 2
-    const group2 = CONFIG.PEOPLE.filter(p => !group3.includes(p));
+    const group2 = CONFIG.PEOPLE.filter(p => !group1.includes(p));
     
     // Verificar que el grupo de 2 también no haya sido usado
     const group2Used = history.some(entry => 
@@ -239,7 +239,7 @@ function generateRandomCombination() {
     );
     
     return {
-        group3: group3,
+        group1: group1,
         group2: group2,
         group2Used: group2Used
     };
@@ -250,8 +250,8 @@ function isCombinationUsed(combination) {
     if (!combination) return true; // Si es null, ya no hay combinaciones
     
     // Verificar grupos de 3
-    const group3Used = history.some(entry => 
-        arraysEqual(combination.group3.sort(), entry.group3.sort())
+    const group1Used = history.some(entry => 
+        arraysEqual(combination.group1.sort(), entry.group1.sort())
     );
     
     // Verificar grupos de 2
@@ -259,7 +259,7 @@ function isCombinationUsed(combination) {
         arraysEqual(combination.group2.sort(), entry.group2.sort())
     );
 
-    return group3Used || group2Used;
+    return group1Used || group2Used;
 }
 
 // Comparar arrays
@@ -283,7 +283,7 @@ function displayResults(combination, weekType, date) {
     
     // Determinar cuál grupo es de 3 y cuál de 2
     // El grupo de 3 siempre será asignado al schedule 1 de la semana actual
-    const group3Schedule = scheduleData.schedule1;
+    const group1Schedule = scheduleData.schedule1;
     const group2Schedule = scheduleData.schedule2;
 
     weekTitle.textContent = `Generada: ${date}`;
@@ -302,7 +302,7 @@ function displayResults(combination, weekType, date) {
     const schedule3El = document.getElementById('schedule3');
     const scheduleDetails3El = document.getElementById('scheduleDetails3');
     
-    group3El.innerHTML = combination.group3
+    group3El.innerHTML = combination.group1
         .map(person => `<li>${person}</li>`)
         .join('');
     
@@ -369,7 +369,7 @@ function updateHistoryDisplay() {
                 <div class="history-item ${weekClass}">
                     <div>
                         <strong>Combinación ${idx + 1}:</strong><br>
-                        Semana ${entry.weekNumber} - Grupo de 3: ${entry.group3.join(', ')} | Grupo de 2: ${entry.group2.join(', ')}
+                        Período ${entry.weekNumber} - Grupo de 3: ${entry.group1.join(', ')} | Grupo de 2: ${entry.group2.join(', ')}
                         <div class="history-date">${entry.date}</div>
                     </div>
                 </div>
@@ -409,7 +409,7 @@ async function saveToSupabase(combination, weekType) {
     try {
         console.log('Enviando a Supabase...', {
             week_number: currentWeekNumber,
-            group_3: combination.group3,
+            group_1: combination.group1,
             group_2: combination.group2
         });
 
@@ -421,7 +421,7 @@ async function saveToSupabase(combination, weekType) {
             },
             body: JSON.stringify({
                 week_number: currentWeekNumber,
-                group_3: combination.group3,
+                group_1: combination.group1,
                 group_2: combination.group2,
                 schedule_3: scheduleData.schedule1.time,
                 schedule_2: scheduleData.schedule2.time,
@@ -494,8 +494,8 @@ async function showHistoryModal() {
         historyList.innerHTML = data.map((entry, idx) => `
             <div class="history-item">
                 <div>
-                    <strong>📅 Periodo ${entry.week_number} - ${new Date(entry.created_at).toLocaleDateString('es-ES')}</strong><br>
-                    <strong>Grupo de 3:</strong> ${entry.group_3.join(', ')}<br>
+                    <strong>📅 Período ${entry.week_number} - ${new Date(entry.created_at).toLocaleDateString('es-ES')}</strong><br>
+                    <strong>Grupo de 3:</strong> ${entry.group_1.join(', ')}<br>
                     <span style="color: #666; font-size: 0.9em;">
                         ${entry.schedule_3} - ${entry.days_3.join(', ')}
                     </span><br>
@@ -521,8 +521,8 @@ function getLocalHistoryHTML() {
     return history.map((entry, idx) => `
         <div class="history-item">
             <div>
-                <strong>📅 Periodo ${entry.weekNumber} - ${entry.date}</strong><br>
-                <strong>Grupo de 3:</strong> ${entry.group3.join(', ')}<br>
+                <strong>📅 Período ${entry.weekNumber} - ${entry.date}</strong><br>
+                <strong>Grupo de 3:</strong> ${entry.group1.join(', ')}<br>
                 <strong>Grupo de 2:</strong> ${entry.group2.join(', ')}
             </div>
         </div>
