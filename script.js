@@ -364,19 +364,24 @@ function resetHistory() {
 // Guardar en Supabase
 async function saveToSupabase(combination, weekType) {
     if (!CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL === 'https://your-project.supabase.co') {
-        console.log('⚠️ Supabase no configurado. Los datos se guardan solo localmente.');
+        console.log('⚠️ Supabase no configurado');
         return;
     }
 
     const scheduleData = SCHEDULES[weekType];
 
     try {
+        console.log('Enviando a Supabase...', {
+            week_number: currentWeekNumber,
+            group_3: combination.group3,
+            group_2: combination.group2
+        });
+
         const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/roulette_history`, {
             method: 'POST',
             headers: {
                 'apikey': CONFIG.SUPABASE_KEY,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 week_number: currentWeekNumber,
@@ -389,13 +394,17 @@ async function saveToSupabase(combination, weekType) {
             })
         });
 
+        console.log('Response Supabase:', response.status, response.statusText);
+        const data = await response.text();
+        console.log('Data:', data);
+
         if (response.ok) {
             console.log('✅ Guardado en Supabase');
         } else {
-            console.log('Nota: Supabase no disponible, datos guardados localmente');
+            console.log('❌ Error al guardar:', data);
         }
     } catch (error) {
-        console.log('Datos guardados localmente (Supabase no disponible)');
+        console.log('Error Supabase:', error);
     }
 }
 
@@ -499,36 +508,23 @@ async function deleteSupabaseHistory() {
     if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_URL !== 'https://your-project.supabase.co') {
         console.log('Borrando registros de Supabase...');
         try {
-            // Obtener todos los registros
-            const getResponse = await fetch(
+            const deleteResp = await fetch(
                 `${CONFIG.SUPABASE_URL}/rest/v1/roulette_history`,
                 {
-                    method: 'GET',
+                    method: 'DELETE',
                     headers: {
                         'apikey': CONFIG.SUPABASE_KEY,
                         'Content-Type': 'application/json'
                     }
                 }
             );
-
-            if (getResponse.ok) {
-                const records = await getResponse.json();
-                console.log(`Encontrados ${records.length} registros`);
-                
-                // Borrar cada uno
-                for (let record of records) {
-                    const deleteResp = await fetch(
-                        `${CONFIG.SUPABASE_URL}/rest/v1/roulette_history?id=eq.${record.id}`,
-                        {
-                            method: 'DELETE',
-                            headers: {
-                                'apikey': CONFIG.SUPABASE_KEY,
-                                'Content-Type': 'application/json'
-                            }
-                        }
-                    );
-                    console.log(`Borrado ${record.id}: ${deleteResp.ok}`);
-                }
+            
+            console.log('Delete response:', deleteResp.status, deleteResp.statusText);
+            const respText = await deleteResp.text();
+            console.log('Delete data:', respText);
+            
+            if (deleteResp.ok) {
+                console.log('✅ Supabase borrado');
             }
         } catch (error) {
             console.log('Error al borrar Supabase:', error);
