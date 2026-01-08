@@ -213,15 +213,33 @@ function generateRandomCombination() {
     
     console.log(`Total combinaciones posibles: ${combinations3.length}`);
     
-    // Filtrar las que ya no han sido usadas
+    // Obtener personas del período anterior (si existe)
+    const lastEntry = history.length > 0 ? history[history.length - 1] : null;
+    const previousGroup1 = lastEntry ? lastEntry.group1 : [];
+    const previousGroup2 = lastEntry ? lastEntry.group2 : [];
+    
+    console.log(`Grupo 1 anterior: ${previousGroup1.join(', ')}`);
+    console.log(`Grupo 2 anterior: ${previousGroup2.join(', ')}`);
+    
+    // Filtrar combinaciones válidas
     const availableCombinations = combinations3.filter(combo => {
-        const used = history.some(entry => 
+        // No puede repetir la misma combinación de 3
+        const combo_used = history.some(entry => 
             arraysEqual(combo.sort(), entry.group1.sort())
         );
-        return !used;
+        if (combo_used) return false;
+        
+        // No puede haber personas del grupo 1 anterior en el nuevo grupo 1
+        const hasPersonFromPreviousGroup1 = combo.some(p => previousGroup1.includes(p));
+        if (hasPersonFromPreviousGroup1) {
+            console.log(`Eliminando: ${combo.join(', ')} - tiene personas del grupo 1 anterior`);
+            return false;
+        }
+        
+        return true;
     });
     
-    console.log(`Combinaciones disponibles: ${availableCombinations.length}`);
+    console.log(`Combinaciones disponibles (después de filtro de grupo 1): ${availableCombinations.length}`);
     
     if (availableCombinations.length === 0) {
         return null; // No hay más combinaciones disponibles
@@ -233,15 +251,24 @@ function generateRandomCombination() {
     // Las 2 personas restantes forman el grupo de 2
     const group2 = CONFIG.PEOPLE.filter(p => !group1.includes(p));
     
-    // Verificar que el grupo de 2 también no haya sido usado
-    const group2Used = history.some(entry => 
+    // Verificar que:
+    // 1. El grupo de 2 no haya sido usado antes
+    // 2. Ninguna persona del grupo 2 anterior esté en el nuevo grupo 2
+    const group2_used = history.some(entry => 
         arraysEqual(group2.sort(), entry.group2.sort())
     );
     
+    const hasPersonFromPreviousGroup2 = group2.some(p => previousGroup2.includes(p));
+    
+    if (group2_used || hasPersonFromPreviousGroup2) {
+        console.log(`Grupo 2 no válido. Usado antes: ${group2_used}, Personas del anterior: ${hasPersonFromPreviousGroup2}`);
+        // Intentar recursivamente otra vez
+        return generateRandomCombination();
+    }
+    
     return {
         group1: group1,
-        group2: group2,
-        group2Used: group2Used
+        group2: group2
     };
 }
 
