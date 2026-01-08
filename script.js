@@ -269,10 +269,10 @@ function displayResults(combination, weekType, date) {
         .map(person => `<li>${person}</li>`)
         .join('');
     
-    schedule3El.textContent = group3Schedule.time;
+    schedule3El.textContent = group1Schedule.time;
     scheduleDetails3El.innerHTML = `
-        <strong>Horario:</strong> ${group3Schedule.time}<br>
-        <strong>Días:</strong> ${group3Schedule.days.join(', ')}
+        <strong>Horario:</strong> ${group1Schedule.time}<br>
+        <strong>Días:</strong> ${group1Schedule.days.join(', ')}
     `;
 
     // Grupo de 2
