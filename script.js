@@ -408,7 +408,7 @@ function getLocalHistoryHTML() {
 }
 // Borrar historial de Supabase
 async function deleteSupabaseHistory() {
-    if (!confirm('¿Borrar historial local? (El historial en Supabase debe borrarse manualmente desde el dashboard)')) {
+    if (!confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) {
         return;
     }
 
@@ -416,6 +416,7 @@ async function deleteSupabaseHistory() {
     localStorage.removeItem(CONFIG.STORAGE_KEY);
     history = [];
     currentWeekNumber = 1;
+    updateHistoryDisplay();
     
     // Si Supabase está configurado, intentar borrar
     if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_URL !== 'https://your-project.supabase.co') {
@@ -455,7 +456,11 @@ async function deleteSupabaseHistory() {
         }
     }
     
-    // Actualizar vista
-    showHistoryModal();
-    alert('✅ Historial borrado');
+    // Mostrar modal actualizado
+    const historyList = document.getElementById('modalHistoryList');
+    historyList.innerHTML = '<p class="empty-message">📭 Historial borrado correctamente</p>';
+    
+    setTimeout(() => {
+        location.reload(); // Recargar página para limpiar todo
+    }, 2000);
 }
