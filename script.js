@@ -218,53 +218,65 @@ function generateRandomCombination() {
     const previousGroup1 = lastEntry ? lastEntry.group1 : [];
     const previousGroup2 = lastEntry ? lastEntry.group2 : [];
     
-    console.log(`Grupo 1 anterior: ${previousGroup1.join(', ')}`);
-    console.log(`Grupo 2 anterior: ${previousGroup2.join(', ')}`);
+    console.log(`Período anterior - Grupo 1: ${previousGroup1.join(', ') || 'ninguno'}`);
+    console.log(`Período anterior - Grupo 2: ${previousGroup2.join(', ') || 'ninguno'}`);
     
     // Filtrar combinaciones válidas
     const availableCombinations = combinations3.filter(combo => {
         // No puede repetir la misma combinación de 3
         const combo_used = history.some(entry => 
-            arraysEqual(combo.sort(), entry.group1.sort())
+            arraysEqual([...combo].sort(), [...entry.group1].sort())
         );
-        if (combo_used) return false;
+        if (combo_used) {
+            console.log(`  ❌ ${combo.join(', ')} - ya usado`);
+            return false;
+        }
         
         // No puede haber personas del grupo 1 anterior en el nuevo grupo 1
         const hasPersonFromPreviousGroup1 = combo.some(p => previousGroup1.includes(p));
         if (hasPersonFromPreviousGroup1) {
-            console.log(`Eliminando: ${combo.join(', ')} - tiene personas del grupo 1 anterior`);
+            console.log(`  ❌ ${combo.join(', ')} - tiene personas del grupo 1 anterior`);
             return false;
         }
         
+        // Verificar grupo 2 (los 2 restantes)
+        const tempGroup2 = CONFIG.PEOPLE.filter(p => !combo.includes(p));
+        
+        // No puede repetir grupo 2
+        const group2_used = history.some(entry => 
+            arraysEqual([...tempGroup2].sort(), [...entry.group2].sort())
+        );
+        if (group2_used) {
+            console.log(`  ❌ ${combo.join(', ')} - grupo 2 (${tempGroup2.join(', ')}) ya usado`);
+            return false;
+        }
+        
+        // No puede haber personas del grupo 2 anterior en el nuevo grupo 2
+        const hasPersonFromPreviousGroup2 = tempGroup2.some(p => previousGroup2.includes(p));
+        if (hasPersonFromPreviousGroup2) {
+            console.log(`  ❌ ${combo.join(', ')} - grupo 2 tiene personas del grupo 2 anterior`);
+            return false;
+        }
+        
+        console.log(`  ✅ ${combo.join(', ')} - válido`);
         return true;
     });
     
-    console.log(`Combinaciones disponibles (después de filtro de grupo 1): ${availableCombinations.length}`);
+    console.log(`Combinaciones disponibles: ${availableCombinations.length}`);
     
     if (availableCombinations.length === 0) {
-        return null; // No hay más combinaciones disponibles
+        console.log('⚠️ No hay combinaciones posibles');
+        return null;
     }
     
     // Elegir aleatoriamente una combinación de 3
-    const group1 = availableCombinations[Math.floor(Math.random() * availableCombinations.length)];
+    const selectedIndex = Math.floor(Math.random() * availableCombinations.length);
+    const group1 = availableCombinations[selectedIndex];
     
     // Las 2 personas restantes forman el grupo de 2
     const group2 = CONFIG.PEOPLE.filter(p => !group1.includes(p));
     
-    // Verificar que:
-    // 1. El grupo de 2 no haya sido usado antes
-    // 2. Ninguna persona del grupo 2 anterior esté en el nuevo grupo 2
-    const group2_used = history.some(entry => 
-        arraysEqual(group2.sort(), entry.group2.sort())
-    );
-    
-    const hasPersonFromPreviousGroup2 = group2.some(p => previousGroup2.includes(p));
-    
-    if (group2_used || hasPersonFromPreviousGroup2) {
-        console.log(`Grupo 2 no válido. Usado antes: ${group2_used}, Personas del anterior: ${hasPersonFromPreviousGroup2}`);
-        // Intentar recursivamente otra vez
-        return generateRandomCombination();
-    }
+    console.log(`Seleccionado - Grupo 1: ${group1.join(', ')}, Grupo 2: ${group2.join(', ')}`);
     
     return {
         group1: group1,
