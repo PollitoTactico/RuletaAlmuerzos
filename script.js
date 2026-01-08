@@ -215,11 +215,11 @@ function generateRandomCombination() {
     
     // Obtener personas del período anterior (si existe)
     const lastEntry = history.length > 0 ? history[history.length - 1] : null;
-    const previousGroup1 = lastEntry ? lastEntry.group1 : [];
-    const previousGroup2 = lastEntry ? lastEntry.group2 : [];
+    const previousGroup1 = (lastEntry && lastEntry.group1) ? lastEntry.group1 : [];
+    const previousGroup2 = (lastEntry && lastEntry.group2) ? lastEntry.group2 : [];
     
-    console.log(`Período anterior - Grupo 1: ${previousGroup1.join(', ') || 'ninguno'}`);
-    console.log(`Período anterior - Grupo 2: ${previousGroup2.join(', ') || 'ninguno'}`);
+    console.log(`Período anterior - Grupo 1: ${(previousGroup1 || []).join(', ') || 'ninguno'}`);
+    console.log(`Período anterior - Grupo 2: ${(previousGroup2 || []).join(', ') || 'ninguno'}`);
     
     // Filtrar combinaciones válidas
     const availableCombinations = combinations3.filter(combo => {
@@ -380,6 +380,14 @@ function loadHistory() {
     const stored = localStorage.getItem(CONFIG.STORAGE_KEY);
     if (stored) {
         history = JSON.parse(stored);
+        // Normalizar propiedades (pueden ser group1/group_1)
+        history = history.map(entry => ({
+            date: entry.date,
+            weekNumber: entry.weekNumber || entry.week_number,
+            weekType: entry.weekType,
+            group1: entry.group1 || entry.group_1 || [],
+            group2: entry.group2 || entry.group_2 || []
+        }));
     }
     
     // Determinar el número de semana actual basado en el historial
