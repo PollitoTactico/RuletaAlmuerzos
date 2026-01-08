@@ -200,30 +200,66 @@ async function saveToNotion(combination, weekType) {
 
 // Generar una combinación aleatoria
 function generateRandomCombination() {
-    const shuffled = [...CONFIG.PEOPLE].sort(() => Math.random() - 0.5);
+    // Generar todas las combinaciones posibles de 3 personas
+    const combinations3 = [];
+    
+    for (let i = 0; i < CONFIG.PEOPLE.length; i++) {
+        for (let j = i + 1; j < CONFIG.PEOPLE.length; j++) {
+            for (let k = j + 1; k < CONFIG.PEOPLE.length; k++) {
+                combinations3.push([CONFIG.PEOPLE[i], CONFIG.PEOPLE[j], CONFIG.PEOPLE[k]]);
+            }
+        }
+    }
+    
+    console.log(`Total combinaciones posibles de 3: ${combinations3.length}`);
+    
+    // Filtrar las que ya no han sido usadas
+    const availableCombinations = combinations3.filter(combo => {
+        const used = history.some(entry => 
+            arraysEqual(combo.sort(), entry.group3.sort())
+        );
+        return !used;
+    });
+    
+    console.log(`Combinaciones disponibles de 3: ${availableCombinations.length}`);
+    
+    if (availableCombinations.length === 0) {
+        return null; // No hay más combinaciones disponibles
+    }
+    
+    // Elegir aleatoriamente una combinación de 3
+    const group3 = availableCombinations[Math.floor(Math.random() * availableCombinations.length)];
+    
+    // Las 2 personas restantes forman el grupo de 2
+    const group2 = CONFIG.PEOPLE.filter(p => !group3.includes(p));
+    
+    // Verificar que el grupo de 2 también no haya sido usado
+    const group2Used = history.some(entry => 
+        arraysEqual(group2.sort(), entry.group2.sort())
+    );
+    
     return {
-        group3: shuffled.slice(0, 3),
-        group2: shuffled.slice(3, 5)
+        group3: group3,
+        group2: group2,
+        group2Used: group2Used
     };
 }
 
 // Verificar si una combinación ya fue usada
 function isCombinationUsed(combination) {
-    return history.some(entry => {
-        // Verificar grupos de 3
-        const group3Used = arraysEqual(
-            combination.group3.sort(),
-            entry.group3.sort()
-        );
-        
-        // Verificar grupos de 2
-        const group2Used = arraysEqual(
-            combination.group2.sort(),
-            entry.group2.sort()
-        );
+    if (!combination) return true; // Si es null, ya no hay combinaciones
+    
+    // Verificar grupos de 3
+    const group3Used = history.some(entry => 
+        arraysEqual(combination.group3.sort(), entry.group3.sort())
+    );
+    
+    // Verificar grupos de 2
+    const group2Used = history.some(entry => 
+        arraysEqual(combination.group2.sort(), entry.group2.sort())
+    );
 
-        return group3Used || group2Used;
-    });
+    return group3Used || group2Used;
 }
 
 // Comparar arrays
