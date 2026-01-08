@@ -121,7 +121,6 @@ function generateWeek() {
     // Guardar en Supabase
     saveToSupabase(combination, weekType);
 }
-}
 
 // Generar una combinación aleatoria
 function generateRandomCombination() {
