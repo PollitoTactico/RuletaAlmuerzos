@@ -7,7 +7,10 @@ const CONFIG = {
     STORAGE_KEY: 'ruletalmuerzos_history',
     // Configuración Supabase
     SUPABASE_URL: 'https://mylmerudkkykhzofoyim.supabase.co',
-    SUPABASE_KEY: 'sb_publishable_NbVH8PbTil5QG8XfGgUq3A_DmzbBUDu'
+    SUPABASE_KEY: 'sb_publishable_NbVH8PbTil5QG8XfGgUq3A_DmzbBUDu',
+    // Configuración Notion (opcional)
+    NOTION_API_KEY: '', // Reemplazar con tu API key
+    NOTION_DATABASE_ID: '' // Reemplazar con tu database ID
 };
 
 const SCHEDULES = {
@@ -117,10 +120,82 @@ function generateWeek() {
     updateHistoryDisplay();
 
     messageEl.className = 'message success';
-    messageEl.textContent = '✅ ¡Combinación generada exitosamente!';
+    messageEl.textContent = '✅ ¡Combinación generada!';
     
-    // Guardar en Supabase
+    // Guardar en Supabase y Notion
     saveToSupabase(combination, weekType);
+    saveToNotion(combination, weekType);
+}
+
+// Guardar en Notion
+async function saveToNotion(combination, weekType) {
+    if (!CONFIG.NOTION_API_KEY || !CONFIG.NOTION_DATABASE_ID) {
+        console.log('Notion no configurado');
+        return;
+    }
+
+    const scheduleData = SCHEDULES[weekType];
+
+    try {
+        const response = await fetch('https://api.notion.com/v1/pages', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${CONFIG.NOTION_API_KEY}`,
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                parent: {
+                    database_id: CONFIG.NOTION_DATABASE_ID
+                },
+                properties: {
+                    'Name': {
+                        title: [{
+                            text: {
+                                content: `Período ${currentWeekNumber} - ${new Date().toLocaleDateString('es-ES')}`
+                            }
+                        }]
+                    },
+                    'Fecha': {
+                        date: {
+                            start: new Date().toISOString().split('T')[0]
+                        }
+                    },
+                    'Periodo': {
+                        number: currentWeekNumber
+                    },
+                    'Grupo 3': {
+                        multi_select: combination.group3.map(p => ({ name: p }))
+                    },
+                    'Grupo 2': {
+                        multi_select: combination.group2.map(p => ({ name: p }))
+                    },
+                    'Horario Grupo 3': {
+                        rich_text: [{
+                            text: { content: scheduleData.schedule1.time }
+                        }]
+                    },
+                    'Horario Grupo 2': {
+                        rich_text: [{
+                            text: { content: scheduleData.schedule2.time }
+                        }]
+                    },
+                    'Días Grupo 3': {
+                        multi_select: scheduleData.schedule1.days.map(d => ({ name: d }))
+                    },
+                    'Días Grupo 2': {
+                        multi_select: scheduleData.schedule2.days.map(d => ({ name: d }))
+                    }
+                }
+            })
+        });
+
+        if (response.ok) {
+            console.log('✅ Guardado en Notion');
+        }
+    } catch (error) {
+        console.log('Error Notion:', error);
+    }
 }
 
 // Generar una combinación aleatoria
@@ -269,23 +344,21 @@ function updateHistoryDisplay() {
 
 // Reiniciar historial
 function resetHistory() {
-    if (confirm('¿Estás seguro de que quieres borrar todo el historial? Esta acción no se puede deshacer.')) {
-        localStorage.removeItem(CONFIG.STORAGE_KEY);
-        history = [];
-        currentWeekNumber = 1;
-        updateHistoryDisplay();
-        
-        document.getElementById('results').style.display = 'none';
-        
-        const messageEl = document.getElementById('message');
-        messageEl.className = 'message success';
-        messageEl.textContent = '✅ Historial reiniciado correctamente';
-        
-        setTimeout(() => {
-            messageEl.textContent = '';
-            messageEl.className = 'message';
-        }, 3000);
-    }
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+    history = [];
+    currentWeekNumber = 1;
+    updateHistoryDisplay();
+    
+    document.getElementById('results').style.display = 'none';
+    
+    const messageEl = document.getElementById('message');
+    messageEl.className = 'message success';
+    messageEl.textContent = '✅ Historial reiniciado';
+    
+    setTimeout(() => {
+        messageEl.textContent = '';
+        messageEl.className = 'message';
+    }, 3000);
 }
 
 // Guardar en Supabase
@@ -412,11 +485,7 @@ function getLocalHistoryHTML() {
 }
 // Borrar historial de Supabase
 async function deleteSupabaseHistory() {
-    if (!confirm('¿Borrar TODO el historial? Esta acción no se puede deshacer.')) {
-        return;
-    }
-
-    console.log('Iniciando borrado de historial...');
+    console.log('Borrando historial...');
     
     // Borrar localStorage
     localStorage.removeItem(CONFIG.STORAGE_KEY);
@@ -468,9 +537,9 @@ async function deleteSupabaseHistory() {
     
     // Mostrar modal vacío
     const historyList = document.getElementById('modalHistoryList');
-    historyList.innerHTML = '<p class="empty-message">✅ Historial borrado correctamente</p>';
+    historyList.innerHTML = '<p class="empty-message">✅ Historial borrado</p>';
     
-    // Esperar 2 segundos y recargar para mostrar cambios
+    // Esperar 2 segundos y recargar
     setTimeout(() => {
         location.reload();
     }, 2000);
