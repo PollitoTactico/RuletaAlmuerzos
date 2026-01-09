@@ -384,7 +384,7 @@ async function saveToSupabase(combination, weekType) {
             },
             body: JSON.stringify({
                 week_number: currentWeekNumber,
-                group_1: combination.group1,
+                group_3: combination.group1,
                 group_2: combination.group2,
                 schedule_3: scheduleData.schedule1.time,
                 schedule_2: scheduleData.schedule2.time,
@@ -458,7 +458,7 @@ async function showHistoryModal() {
             <div class="history-item">
                 <div>
                     <strong>📅 Período ${entry.week_number} - ${new Date(entry.created_at).toLocaleDateString('es-ES')}</strong><br>
-                    <strong>Grupo de 3:</strong> ${entry.group_1.join(', ')}<br>
+                    <strong>Grupo de 3:</strong> ${entry.group_3.join(', ')}<br>
                     <span style="color: #666; font-size: 0.9em;">
                         ${entry.schedule_3} - ${entry.days_3.join(', ')}
                     </span><br>
