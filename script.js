@@ -82,22 +82,13 @@ function generateWeek() {
     const weekType = getCurrentWeekType();
     
     // Generar combinación válida
-    let attempt = 0;
-    let combination = null;
+    const combination = generateRandomCombination();
 
-    while (attempt < CONFIG.MAX_RETRIES) {
-        combination = generateRandomCombination();
-        
-        if (!isCombinationUsed(combination)) {
-            break;
-        }
-        
-        attempt++;
-    }
-
-    if (attempt === CONFIG.MAX_RETRIES) {
+    if (!combination) {
+        // Calcular total de combinaciones posibles
+        const totalCombinations = getAllGroupsOf3().length;
         messageEl.className = 'message warning';
-        messageEl.textContent = '⚠️ Ya no hay combinaciones posibles. Considera reiniciar el historial.';
+        messageEl.textContent = `⚠️ Ya no hay combinaciones posibles. Se han usado ${history.length} de ${totalCombinations} combinaciones posibles. Considera reiniciar el historial.`;
         document.getElementById('results').style.display = 'none';
         return;
     }
@@ -198,21 +189,109 @@ async function saveToNotion(combination, weekType) {
     }
 }
 
-// Generar una combinación aleatoria
+// Generar todas las combinaciones posibles de n elementos tomados de r en r
+function generateCombinations(array, r) {
+    if (r === 1) {
+        return array.map(item => [item]);
+    }
+    
+    const combinations = [];
+    for (let i = 0; i <= array.length - r; i++) {
+        const head = array[i];
+        const remaining = array.slice(i + 1);
+        const subCombinations = generateCombinations(remaining, r - 1);
+        
+        for (let subCombo of subCombinations) {
+            combinations.push([head, ...subCombo]);
+        }
+    }
+    
+    return combinations;
+}
+
+// Obtener todas las combinaciones de grupo de 3
+function getAllGroupsOf3() {
+    return generateCombinations(CONFIG.PEOPLE, 3);
+}
+
+// Obtener el grupo de 2 complementario (las personas que quedan)
+function getComplementaryGroup(group3) {
+    return CONFIG.PEOPLE.filter(person => !group3.includes(person));
+}
+
+// Calcular el número de semana ISO desde una fecha
+function getWeekNumber(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// Obtener el índice de combinación basado en la fecha
+function getCombinationIndexByDate() {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const weekNumber = getWeekNumber(today);
+    
+    // Crear un seed determinístico basado en año + semana
+    // Esto asegura que la misma semana siempre genera la misma combinación
+    const seed = (currentYear * 53 + weekNumber) % 10;
+    
+    return seed;
+}
+
+// Generar una combinación aleatoria basada en la fecha y historial
 function generateRandomCombination() {
-    // Mezclar aleatoriamente todas las personas
-    const shuffled = [...CONFIG.PEOPLE].sort(() => Math.random() - 0.5);
+    // Obtener todas las combinaciones posibles de 3 personas
+    const allGroup3Combinations = getAllGroupsOf3();
     
-    // Primera 3 personas forman el grupo 1
-    const group1 = shuffled.slice(0, 3);
+    // Obtener el índice basado en la fecha (determinístico)
+    let baseIndex = getCombinationIndexByDate();
     
-    // Últimas 2 personas forman el grupo 2
-    const group2 = shuffled.slice(3, 5);
+    // Filtrar las que ya han sido usadas
+    const availableCombinations = allGroup3Combinations.filter(group3 => {
+        const group2 = getComplementaryGroup(group3);
+        return !isCombinationUsed({ group1: group3, group2: group2 });
+    });
     
-    console.log(`Grupo 1: ${group1.join(', ')}, Grupo 2: ${group2.join(', ')}`);
+    // Si no hay combinaciones disponibles, retornar null
+    if (availableCombinations.length === 0) {
+        return null;
+    }
+    
+    // Intentar usar la combinación basada en la fecha
+    // Si ya fue usada, buscar la siguiente disponible
+    let selectedGroup3 = null;
+    let attempts = 0;
+    let testIndex = baseIndex;
+    
+    while (!selectedGroup3 && attempts < allGroup3Combinations.length) {
+        const candidate = allGroup3Combinations[testIndex % allGroup3Combinations.length];
+        const group2 = getComplementaryGroup(candidate);
+        
+        if (!isCombinationUsed({ group1: candidate, group2: group2 })) {
+            selectedGroup3 = candidate;
+            break;
+        }
+        
+        testIndex++;
+        attempts++;
+    }
+    
+    // Si no encontramos por la fórmula, seleccionar una aleatoria disponible
+    if (!selectedGroup3) {
+        selectedGroup3 = availableCombinations[Math.floor(Math.random() * availableCombinations.length)];
+    }
+    
+    const group2 = getComplementaryGroup(selectedGroup3);
+    
+    console.log(`Semana actual: ${getWeekNumber(new Date())}, Índice: ${baseIndex}`);
+    console.log(`Grupo 3: ${selectedGroup3.join(', ')}, Grupo 2: ${group2.join(', ')}`);
+    console.log(`Combinaciones disponibles restantes: ${availableCombinations.length - 1}`);
     
     return {
-        group1: group1,
+        group1: selectedGroup3,
         group2: group2
     };
 }
@@ -221,8 +300,19 @@ function generateRandomCombination() {
 function isCombinationUsed(combination) {
     if (!combination) return true;
     
-    // Simplemente hacer aleatorio sin verificaciones
-    return false; // Siempre permitir nueva combinación
+    // Normalizar la combinación para comparación (ordenar los miembros)
+    const combo1Sorted = combination.group1.slice().sort();
+    const combo2Sorted = combination.group2.slice().sort();
+    
+    // Buscar en el historial
+    return history.some(entry => {
+        const entrGroup1Sorted = entry.group1.slice().sort();
+        const entrGroup2Sorted = entry.group2.slice().sort();
+        
+        // Comparar si son iguales
+        return arraysEqual(combo1Sorted, entrGroup1Sorted) && 
+               arraysEqual(combo2Sorted, entrGroup2Sorted);
+    });
 }
 
 // Comparar arrays
@@ -557,3 +647,35 @@ async function deleteSupabaseHistory() {
         location.reload();
     }, 1500);
 }
+
+// Función para obtener información de combinaciones (útil para debugging)
+function getCombinationsInfo() {
+    const allCombinations = getAllGroupsOf3();
+    const usedCombinations = history.map(entry => ({
+        group1: entry.group1.slice().sort(),
+        group2: entry.group2.slice().sort()
+    }));
+    
+    const availableCombinations = allCombinations.filter(group3 => {
+        const group2 = getComplementaryGroup(group3);
+        return !isCombinationUsed({ group1: group3, group2: group2 });
+    });
+    
+    return {
+        totalPossible: allCombinations.length,
+        used: history.length,
+        available: availableCombinations.length,
+        percentageUsed: Math.round((history.length / allCombinations.length) * 100),
+        allCombinations: allCombinations.map(group3 => ({
+            group3: group3,
+            group2: getComplementaryGroup(group3)
+        })),
+        usedCombinations: history,
+        availableCombinations: availableCombinations.map(group3 => ({
+            group3: group3,
+            group2: getComplementaryGroup(group3)
+        }))
+    };
+}
+
+// Para ver la información en la consola: console.log(getCombinationsInfo())
