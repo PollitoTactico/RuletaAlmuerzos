@@ -512,14 +512,13 @@ jobs:
     
     steps:
       - name: OWASP ZAP Scan
-        uses: zaproxy/action-full-scan@v0.8.0
+        uses: zaproxy/action-full-scan@v0.13.0
         with:
           target: 'https://ruleta-almuerzos.example.com'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
           allow_issue_writing: false
           fail_action: false
-          artifact_name: 'zap-scan'
 
       - name: Generate DAST report
         run: |
