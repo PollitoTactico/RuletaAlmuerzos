@@ -195,6 +195,11 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Convert image name to lowercase
+        id: image-name
+        run: |
+          echo "IMAGE_LOWER=$(echo '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         id: build-push
@@ -215,7 +220,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
         with:
-          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          image-ref: ${{ steps.image-name.outputs.IMAGE_LOWER }}:${{ github.sha }}
           format: 'sarif'
           output: 'trivy-image-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -232,9 +237,11 @@ jobs:
       - name: Run Dockle for Docker image linting
         uses: erzz/dockle-action@v1
         with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          image: ${{ steps.image-name.outputs.IMAGE_LOWER }}:${{ github.sha }}
           exit-code: '0'
           failure-threshold: 'high'
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
 
   # ====================
   # STAGE 4: SIGN & VERIFY ARTIFACTS
