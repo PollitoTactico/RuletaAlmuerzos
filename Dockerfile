@@ -14,7 +14,6 @@ RUN addgroup -g 1001 appgroup && \
 COPY index.html /usr/share/nginx/html/
 COPY style.css /usr/share/nginx/html/
 COPY script.js /usr/share/nginx/html/
-COPY vercel.json /usr/share/nginx/html/ || true
 
 # Copiar configuración personalizada de nginx
 COPY nginx.conf /etc/nginx/nginx.conf
