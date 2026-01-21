@@ -14,18 +14,19 @@ RUN addgroup -g 1001 appgroup && \
 COPY index.html /usr/share/nginx/html/
 COPY style.css /usr/share/nginx/html/
 COPY script.js /usr/share/nginx/html/
-COPY vercel.json /usr/share/nginx/html/
+COPY vercel.json /usr/share/nginx/html/ || true
 
 # Copiar configuración personalizada de nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Cambiar permisos
+# Cambiar permisos para non-root user
 RUN chown -R appuser:appgroup /usr/share/nginx/html && \
     chown -R appuser:appgroup /var/cache/nginx && \
     chown -R appuser:appgroup /var/log/nginx && \
     mkdir -p /var/run && \
     touch /var/run/nginx.pid && \
-    chown -R appuser:appgroup /var/run/nginx.pid
+    chown -R appuser:appgroup /var/run/nginx.pid && \
+    chmod -R 755 /var/log/nginx /var/cache/nginx /var/run
 
 # Cambiar a usuario no-root
 USER appuser
