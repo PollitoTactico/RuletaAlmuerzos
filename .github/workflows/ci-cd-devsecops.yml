@@ -519,6 +519,7 @@ jobs:
           cmd_options: '-a'
           allow_issue_writing: false
           fail_action: false
+          artifact_name: 'zap-scan'
 
       - name: Generate DAST report
         run: |
