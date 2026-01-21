@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env*
+.vercel
+node_modules
+README.md
+CAMBIOS.txt
+COMBINACIONES.md
+NOTION_INTEGRATION.md
+SUPABASE_CONFIG.md
+SUPABASE_SETUP.sql
+*.md
+.github
+k8s
+tests

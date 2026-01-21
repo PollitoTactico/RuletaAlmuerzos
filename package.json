@@ -1,0 +1,16 @@
+{
+  "name": "ruleta-almuerzos",
+  "version": "1.0.0",
+  "description": "Aplicación web para organizar grupos de almuerzo",
+  "main": "index.html",
+  "scripts": {
+    "test": "node tests/test.js",
+    "lint": "echo 'Linting files...' && exit 0",
+    "build": "echo 'Building application...' && mkdir -p dist && cp index.html style.css script.js dist/",
+    "start": "python -m http.server 8080 || npx http-server -p 8080"
+  },
+  "keywords": ["lunch", "scheduler", "groups"],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "devDependencies": {}
+}

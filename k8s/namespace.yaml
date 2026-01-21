@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ruleta-almuerzos
+  labels:
+    app: ruleta-almuerzos
+    environment: production

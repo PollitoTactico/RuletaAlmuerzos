@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ruleta-almuerzos-ingress
+  namespace: ruleta-almuerzos
+  labels:
+    app: ruleta-almuerzos
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ruleta-almuerzos.example.com  # Cambia esto por tu dominio
+    secretName: ruleta-almuerzos-tls
+  rules:
+  - host: ruleta-almuerzos.example.com  # Cambia esto por tu dominio
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ruleta-almuerzos-service
+            port:
+              number: 80
